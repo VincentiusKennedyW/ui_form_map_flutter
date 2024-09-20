@@ -1,200 +1,149 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:photo_view/photo_view.dart';
 
 class DetailScreen extends StatelessWidget {
   final Map<String, dynamic> data;
 
-  const DetailScreen({super.key, required this.data});
-
-  // Fungsi untuk membuka WhatsApp dengan nomor telepon
-  Future<void> _launchWhatsApp(String phoneNumber) async {
-    final Uri url = Uri.parse('https://wa.me/$phoneNumber');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
-
-  Widget _buildInfoTile(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-              fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 16, color: Colors.black),
-        ),
-        const Divider(height: 20, thickness: 1, color: Colors.grey),
-      ],
-    );
-  }
+  const DetailScreen({Key? key, required this.data}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    LatLng location = LatLng(
+      data['Latitude'] ?? 0.0,
+      data['Longitude'] ?? 0.0,
+    );
+
+    String imageUrl = data['Foto'] ?? 'https://via.placeholder.com/200';
+    String status = data['status'] ?? 'Status tidak tersedia';
+    String timestamp = data['timestamp'] ?? 'Tanggal tidak tersedia';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Informasi Pribadi'),
-        backgroundColor: Colors.blueAccent,
-        elevation: 0,
+        title: const Text('Detail Relawan'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 3,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Informasi Pribadi',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildInfoTile('Name', data['Nama Kepala Keluarga']),
-                    _buildInfoTile('Alamat', data['Alamat']),
-                    _buildInfoTile('DPT', data['DPT']),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (_) {
-                            return DraggableScrollableSheet(
-                              expand: false,
-                              initialChildSize: 0.5,
-                              minChildSize: 0.3,
-                              maxChildSize: 0.8,
-                              builder: (context, scrollController) {
-                                return Container(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: GoogleMap(
-                                    initialCameraPosition: CameraPosition(
-                                      target: LatLng(
-                                          data['Latitude'], data['Longitude']),
-                                      zoom: 14,
-                                    ),
-                                    markers: {
-                                      Marker(
-                                        markerId: const MarkerId('location'),
-                                        position: LatLng(data['Latitude'],
-                                            data['Longitude']),
-                                      ),
-                                    },
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        );
-                      },
-                      child: const Text(
-                        'Lihat Lokasi di Peta',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+            GestureDetector(
+              onTap: () {
+                _showImageDialog(context, imageUrl);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 3,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Anggota Keluarga',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    ...(data['Anggota Keluarga'] as List).map((anggota) {
-                      final phoneNumber =
-                          anggota['telepon'].replaceFirst(RegExp(r'^0'), '+62');
-                      return ListTile(
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 4.0),
-                        title: Text(
-                          '${anggota['nama']} (${anggota['posisi']})',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        subtitle: GestureDetector(
-                          onTap: () => _launchWhatsApp(phoneNumber),
-                          child: Text(
-                            anggota['telepon'],
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    imageUrl,
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 200,
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                        child: const Icon(
+                          Icons.broken_image,
+                          size: 50,
+                          color: Colors.grey,
                         ),
                       );
-                    }),
-                  ],
+                    },
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            // Gambar dengan indikator loading
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                data['Foto'],
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              (loadingProgress.expectedTotalBytes ?? 1)
-                          : null,
+            Text(
+              'Status: $status',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tanggal: $timestamp',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 300,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: location,
+                    zoom: 14,
+                  ),
+                  markers: {
+                    Marker(
+                      markerId: const MarkerId('locationMarker'),
+                      position: location,
                     ),
-                  );
-                },
+                  },
+                ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showImageDialog(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(10),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Container(
+                width: constraints.maxWidth * 0.9,
+                height: constraints.maxHeight * 0.8,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: PhotoView(
+                    imageProvider: NetworkImage(imageUrl),
+                    backgroundDecoration: const BoxDecoration(
+                      color: Colors.black,
+                    ),
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[300],
+                        child: const Icon(
+                          Icons.broken_image,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

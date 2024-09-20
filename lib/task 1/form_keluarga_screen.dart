@@ -7,6 +7,7 @@ import 'package:location/location.dart';
 import 'package:relawan_pemilu_ui/task%201/anggota_keluarga_widget.dart';
 import 'package:relawan_pemilu_ui/task%201/map_screen.dart';
 import 'package:relawan_pemilu_ui/task%202/map_screen_2.dart';
+import 'package:relawan_pemilu_ui/task%203/list_screen.dart';
 
 class FormKeluarga extends StatefulWidget {
   const FormKeluarga({super.key});
@@ -164,6 +165,14 @@ class _FormKeluargaState extends State<FormKeluarga> {
       appBar: AppBar(
         title: const Text('Form Keluarga'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.details),
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => const ListScreen(),
+              ));
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.moving_outlined),
             onPressed: () {

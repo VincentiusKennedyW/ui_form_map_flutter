@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart' as geo;
 import 'package:location/location.dart';
-
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapsLocationScreen extends StatefulWidget {
@@ -177,26 +176,7 @@ class _MapsLocationScreenState extends State<MapsLocationScreen> {
 
   void onMyLocationButtonPress() async {
     final Location location = Location();
-    late bool serviceEnabled;
-    late PermissionStatus permissionGranted;
-    late LocationData locationData;
-
-    serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) {
-        return;
-      }
-    }
-    permissionGranted = await location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
-        return;
-      }
-    }
-
-    locationData = await location.getLocation();
+    final locationData = await location.getLocation();
     final latLng = LatLng(locationData.latitude!, locationData.longitude!);
     selectedLocation = latLng;
 
