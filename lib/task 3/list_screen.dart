@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:relawan_pemilu_ui/bloc/list_dummy_bloc.dart';
 import 'package:relawan_pemilu_ui/task%202/detail_screen.dart';
 import 'package:relawan_pemilu_ui/task%203/form_3_screen.dart';
 
@@ -90,41 +92,53 @@ class ListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daftar Relawan'),
-        centerTitle: true,
-      ),
-      body: ListView.separated(
-        itemCount: dataDummy.length,
-        separatorBuilder: (context, index) =>
-            const Divider(), // Menambahkan Divider
-        itemBuilder: (BuildContext context, int index) {
-          final item = dataDummy[index];
-          return ListTile(
-            title: Text(item['status']),
-            subtitle: Text(item['timestamp']),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DetailScreen(data: item),
-                ),
+    return BlocProvider(
+      create: (context) => ListDummyBloc()..add(LoadDataEvent(data: dataDummy)),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Daftar Relawan'),
+          centerTitle: true,
+        ),
+        body: BlocBuilder<ListDummyBloc, ListDummyState>(
+          builder: (context, state) {
+            if (state is ListDummyInitial) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is ListDummyLoaded) {
+              return ListView.separated(
+                itemCount: state.data.length,
+                separatorBuilder: (context, index) => const Divider(),
+                itemBuilder: (BuildContext context, int index) {
+                  final item = state.data[index];
+                  return ListTile(
+                    title: Text(item['status']),
+                    subtitle: Text(item['timestamp']),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailScreen(data: item),
+                        ),
+                      );
+                    },
+                  );
+                },
               );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const Form3Screen(),
-            ),
-          );
-        },
+            } else {
+              return const Center(child: Text('Data tidak tersedia.'));
+            }
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.add),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const Form3Screen(),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
